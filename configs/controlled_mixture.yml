@@ -4,9 +4,22 @@ sampling_rate_hz: 100
 component_order: [Z, N, E]
 continuous_duration_s: 90.0
 injected_event_duration_s: 20.0
+event_reference:
+  duration_s: 35.0
+  p_onset_s: 10.0
+  injected_slice_s: [10.0, 30.0]
+noise_construction:
+  rule_id: ordered_three_chunk_concat_v1
+  source_chunk_samples: [3500, 3500, 3500]
+  used_samples: [3500, 3500, 2000]
+  output_ranges_samples: [[0, 3500], [3500, 7000], [7000, 9000]]
+  per_chunk_filtering: true
+  crossfade: false
+  post_concat_component_median_removal: true
 target_snr_db: [-5.0, 0.0, 5.0]
 snr_scaling_window:
-  start: hidden_onset
+  event_start: event_reference_p
+  noise_start: hidden_onset
   duration_s: 10.0
 score_crop:
   duration_s: 35.0

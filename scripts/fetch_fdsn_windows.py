@@ -21,10 +21,41 @@ def split_values(value: str) -> list[str]:
     return [item.strip() for item in value.split(";") if item.strip()]
 
 
-def requests_from_rows(rows: Iterable[dict[str, str]], provider_override: str | None = None) -> list[dict[str, str]]:
+def _normalized_requests(
+    rows: Iterable[dict[str, str]], provider_override: str | None
+) -> list[dict[str, str]]:
+    unique: dict[str, dict[str, str]] = {}
+    for row in rows:
+        source_id = row["source_window_id"]
+        request = {
+            "source_window_id": source_id,
+            "network": row["network"],
+            "station": row["station"],
+            "location": row["location"],
+            "channel_pattern": row["channel"],
+            "start_time": row["start_time"],
+            "end_time": row["end_time"],
+            "event_noise_role": row["role"],
+            "provider": provider_override or row["provider"],
+            "fdsn_source": row["fdsn_source"],
+        }
+        if source_id in unique and unique[source_id] != request:
+            raise ValueError(f"source_window_id {source_id} maps to inconsistent requests")
+        unique[source_id] = request
+    return [unique[key] for key in sorted(unique)]
+
+
+def requests_from_rows(
+    rows: Iterable[dict[str, str]], provider_override: str | None = None
+) -> list[dict[str, str]]:
+    rows = list(rows)
+    if rows and "source_window_id" in rows[0] and "role" in rows[0]:
+        return _normalized_requests(rows, provider_override)
+
     requests: dict[tuple[str, ...], dict[str, str]] = {}
     for row in rows:
         common = {
+            "source_window_id": row.get("event_source_id", ""),
             "network": row["network"],
             "station": row["station"],
             "location": row["location"],
@@ -37,17 +68,16 @@ def requests_from_rows(rows: Iterable[dict[str, str]], provider_override: str | 
         }
         key = tuple(common[name] for name in ("network", "station", "location", "channel_pattern", "start_time", "end_time"))
         requests[key] = common
-
         if row.get("noise_station"):
-            columns = {
-                name: split_values(row[f"noise_{name}"])
-                for name in ("network", "station", "location", "channel_pattern", "start_time", "end_time", "provider", "fdsn_source")
-            }
+            names = ("network", "station", "location", "channel_pattern", "start_time", "end_time", "provider", "fdsn_source")
+            columns = {name: split_values(row[f"noise_{name}"]) for name in names}
+            source_ids = split_values(row.get("noise_source_id", ""))
             lengths = {len(values) for values in columns.values()}
             if len(lengths) != 1:
                 raise ValueError(f"noise request columns have unequal lengths for case {row['case_id']}")
             for index in range(next(iter(lengths))):
                 item = {
+                    "source_window_id": source_ids[index] if source_ids else "",
                     "network": columns["network"][index],
                     "station": columns["station"][index],
                     "location": columns["location"][index],
@@ -64,13 +94,15 @@ def requests_from_rows(rows: Iterable[dict[str, str]], provider_override: str | 
 
 
 def output_name(request: dict[str, str]) -> str:
+    if request.get("source_window_id"):
+        return f"{request['source_window_id']}.mseed"
     compact = request["start_time"].replace("-", "").replace(":", "").replace(".", "").replace("Z", "")
     return f"{request['network']}.{request['station']}.{request['location']}.{request['event_noise_role']}.{compact}.mseed"
 
 
 def run(manifest: Path, output_dir: Path, provider: str | None, dry_run: bool) -> list[dict[str, Any]]:
     requests = requests_from_rows(read_csv(manifest), provider)
-    records = []
+    records: list[dict[str, Any]] = []
     if not dry_run:
         try:
             from obspy import UTCDateTime

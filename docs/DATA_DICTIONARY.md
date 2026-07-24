@@ -20,6 +20,27 @@ One row per controlled mixture. `case_id`, event request fields, noise request
 fields, `target_snr_db`, `hidden_onset_s`, `sampling_rate_hz`,
 `preprocessing_config_id`, and `deterministic_pairing_id` define the case.
 Semicolon-separated noise fields preserve the ordered source-window sequence.
+The fields `noise_used_samples` and `noise_output_sample_start/stop` make the
+3,500 + 3,500 + 2,000-sample construction explicit.
+
+### `data/manifests/controlled_mixture_requests.csv`
+
+Normalized one-request-per-row representation. `request_id` is unique per case;
+`source_window_id` identifies a deduplicated acquisition window. `role`,
+`sequence_index`, `construction_role`, `required_samples`, `used_samples`, and
+`output_sample_start/stop` specify the event request and three noise chunks.
+Repeated source windows across target-SNR siblings are intentional.
+
+## User-Generated Reconstruction Outputs
+
+`scripts/reconstruct_controlled_cases.py` writes outside the package. Each case
+NPZ contains `mixture`, `clean_reference`, `noise_reference`,
+`sampling_rate_hz`, `component_order`, `hidden_onset_sample`,
+`scoring_window_samples`, `target_snr_db`, and `case_id`.
+
+Its `reconstruction_manifest.csv` records case/artifact hashes, sample count,
+component order, event and noise request IDs, source-window IDs and hashes,
+target SNR, achieved SNR, and preprocessing/construction/manifest hashes.
 
 ### `data/manifests/external_real_event_cases.csv`
 

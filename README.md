@@ -1,116 +1,113 @@
 # Seismic Denoising Evaluation Protocol
 
-This repository provides evaluation code, frozen configurations,
-machine-readable case manifests, derived numerical results, and verification
-tools for three-component seismic denoising.
+This repository provides an executable evaluation protocol, frozen
+machine-readable manifests, derived numerical results, and offline
+verification tools for three-component seismic denoising.
 
-Journal manuscripts, supplementary manuscripts, response letters, cover
-letters, and publication-layout figures are not distributed.
+Journal manuscripts, response letters, cover letters, supplementary
+manuscripts, and publication-layout figures are not distributed.
 
-## Purpose
+## Capability Scope
 
-The package supports two practical workflows:
+**Fully offline**
 
-1. evaluate a new denoising method under a fixed three-component contract; and
-2. recompute released report cards and diagnostic E3/E5 results from CSV/JSON.
+- validate released CSV/JSON, schemas, checksums, and privacy boundaries;
+- recompute report cards and station-bootstrap summaries;
+- verify E3/E5 and released Figure 3 numerical artifacts; and
+- run synthetic reconstruction, metric, and adapter tests.
 
-It is an analysis and reproducibility repository, not a model-training project
-or a publication archive.
+**Requires externally acquired waveforms**
 
-## Waveform Contract
+- reconstruct protocol-conformant controlled cases; and
+- evaluate a new denoising method on those reconstructed cases.
 
-Adapters receive one NumPy array with shape `(n_samples, 3)`, floating dtype,
-finite values, columns ordered `Z, N, E`, and sampling rate supplied explicitly
-(100 Hz for the frozen cases). They must return the same shape, sample alignment,
-component order, and physical amplitude scale. Hidden normalization or
-case-dependent rescaling must be disclosed by the adapter.
+Version 1.0.6 provides external real-event result tables and underlying metric
+functions for audit, but not a complete batch CLI for new external real events.
 
-## Scoring Tracks
+**Not distributed**
 
-- **Controlled mixtures:** evaluator-held untapered-onset references support
-  clean-SNR gain, amplitude ratio, waveform correlation, background suppression,
-  covariance shape, and polarization diagnostics.
-- **External real events:** apparent-SNR, raw-input amplitude ratio, and trigger
-  delay are reported without a clean reference.
-- **E3/E5 diagnostics:** station-domain adjustment/matching and descriptive
-  paired-seed contrasts are kept separate from the primary report card.
+- raw MiniSEED or other source waveforms;
+- third-party model weights or training projects;
+- journal submission and review files; and
+- rendered publication figures.
 
-The idealized Wiener implementation is a **source-aware upper-bound diagnostic**,
-not a deployable baseline. DeepDenoiser and CovNorm rows are released as
-evaluation results only; third-party weights and training projects are not
-distributed.
+FDSN availability may change and provider terms continue to apply. The
+reconstruction pathway is protocol-conformant; it is not claimed to be a
+byte-identical replay of unpublished historical case arrays.
 
-## Quick Verification
+## Quick Start
 
-From the repository root:
+Run the normal offline verifier:
 
 ```bash
-python -B scripts/verify_release.py --package-root .
-python -B -m pytest -p no:cacheprovider
+python -B scripts/verify_release.py --package-root . --quick
 ```
 
-The verifier is offline, does not write into the package, and checks schemas,
-checksums, forbidden content, released recomputations, and adapter behavior.
+Run the additional full E3 recomputation:
 
-## Evaluate a New Method
+```bash
+python -B scripts/verify_release.py --package-root . --full
+```
 
-Use an adapter that defines `denoise(waveform, sampling_rate_hz)`:
+Inspect the deduplicated FDSN acquisition plan without network access:
+
+```bash
+python -B scripts/fetch_fdsn_windows.py \
+  --manifest data/manifests/controlled_mixture_requests.csv \
+  --output-dir <OUTPUT_DIR> \
+  --dry-run
+```
+
+Reconstruct controlled cases from locally supplied waveforms:
+
+```bash
+python -B scripts/reconstruct_controlled_cases.py \
+  --package-root . \
+  --manifest data/manifests/controlled_mixture_cases.csv \
+  --waveform-root <WAVEFORM_ROOT> \
+  --output-dir <OUTPUT_DIR>
+```
+
+Evaluate an adapter that defines `denoise(waveform, sampling_rate_hz)`:
 
 ```bash
 python -B scripts/evaluate_method.py \
   --adapter examples/identity_adapter.py \
-  --manifest data/manifests/controlled_mixture_cases.csv \
-  --input-dir /path/to/reconstructed_cases \
-  --output-dir /path/to/evaluation_output
+  --cases-dir <CASES_DIR> \
+  --reconstruction-manifest <RECONSTRUCTION_MANIFEST> \
+  --output-dir <OUTPUT_DIR>
 ```
 
-Waveform evaluation requires locally reconstructed case arrays. The released
-CSV report cards can be recomputed without raw waveforms.
-
-## Fetch External Waveforms
-
-Raw waveforms are not redistributed. Inspect explicit requests without network
-access:
-
-```bash
-python -B scripts/fetch_fdsn_windows.py \
-  --manifest data/manifests/external_real_event_cases.csv \
-  --output-dir /path/to/waveforms \
-  --dry-run
-```
-
-FDSN availability may change, waveform-level reconstruction depends on external
-services, and the original provider terms remain applicable.
+The evaluator passes only the `(9000, 3)` `Z,N,E` mixture and sampling rate to
+the method. The adapter must preserve shape, alignment, component order, and
+physical amplitude scale. Clean/noise references, hidden onset, and target SNR
+remain evaluator-held.
 
 ## Recompute Released Numbers
 
 Each analysis writes only to a user-selected output directory:
 
 ```bash
-python -B analysis/reproduce_report_cards.py --package-root . --output-dir /tmp/report_cards
-python -B analysis/reproduce_station_bootstrap.py --package-root . --output-dir /tmp/bootstrap
-python -B analysis/reproduce_e3_station_domain.py --package-root . --output-dir /tmp/e3
-python -B analysis/reproduce_e5_multiseed.py --package-root . --output-dir /tmp/e5
-python -B analysis/verify_figure3_surrogate.py --package-root . --output-dir /tmp/figure3
+python -B analysis/reproduce_report_cards.py --package-root . --output-dir <OUTPUT_DIR>
+python -B analysis/reproduce_station_bootstrap.py --package-root . --output-dir <OUTPUT_DIR>
+python -B analysis/reproduce_e3_station_domain.py --package-root . --output-dir <OUTPUT_DIR>
+python -B analysis/reproduce_e5_multiseed.py --package-root . --output-dir <OUTPUT_DIR>
+python -B analysis/verify_figure3_surrogate.py --package-root . --output-dir <OUTPUT_DIR>
 ```
 
-Protocol details are in [docs/PROTOCOL.md](docs/PROTOCOL.md), and every public
-table is defined in [docs/DATA_DICTIONARY.md](docs/DATA_DICTIONARY.md).
+See [docs/PROTOCOL.md](docs/PROTOCOL.md) for the construction and scoring
+rules, and [docs/DATA_DICTIONARY.md](docs/DATA_DICTIONARY.md) for public
+schemas.
 
-## Not Distributed
+## Baseline Roles
 
-The repository excludes raw MiniSEED, tensors, model weights, training logs,
-publication source, review correspondence, publication-layout figures, and
-historical release archives.
+The idealized Wiener implementation is a source-aware upper-bound diagnostic,
+not a deployable baseline. DeepDenoiser and CovNorm rows are released evaluation
+results only; third-party weights and training projects are not distributed.
 
-## License
+## License and Citation
 
-Source code is MIT licensed. Released derived metrics and manifests are covered
-by `LICENSE-DATA` (CC BY 4.0). External waveforms remain under their original
-provider terms.
-
-## Citation
-
-Citation metadata for version 1.0.6 are in `CITATION.cff`. A DOI is intentionally
-omitted until a future archival record is created from the reviewed public
-release.
+Source code is MIT licensed. Released derived metrics and manifests use
+`LICENSE-DATA` (CC BY 4.0). External waveforms remain under provider terms.
+Software citation metadata for version 1.0.6 are in `CITATION.cff`; no DOI or
+release date is asserted before formal publication of this public repository.

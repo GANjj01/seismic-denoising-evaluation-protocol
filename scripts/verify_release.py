@@ -10,16 +10,22 @@ import json
 import math
 import os
 import re
+import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from typing import Any, Callable
 
+sys.dont_write_bytecode = True
+for variable in (
+    "PYTHONDONTWRITEBYTECODE", "OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS",
+    "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS",
+):
+    os.environ[variable] = "1"
+
 import numpy as np
 import yaml
-
-sys.dont_write_bytecode = True
-os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
 BANNED_DIRECTORIES = {
     ".git",
@@ -99,6 +105,12 @@ CSV_SCHEMAS = {
         "event_noise_role", "target_snr_db", "hidden_onset_s", "sampling_rate_hz",
         "preprocessing_config_id", "deterministic_pairing_id", "provider", "fdsn_source",
         "noise_station", "noise_start_time", "noise_end_time", "noise_provider", "noise_fdsn_source",
+    },
+    "data/manifests/controlled_mixture_requests.csv": {
+        "case_id", "request_id", "role", "sequence_index", "network", "station",
+        "location", "channel", "start_time", "end_time", "provider", "fdsn_source",
+        "expected_duration_s", "construction_role", "source_window_id",
+        "required_samples", "used_samples", "output_sample_start", "output_sample_stop",
     },
     "data/manifests/external_real_event_cases.csv": {
         "case_id", "network", "station", "location", "channel_pattern", "start_time", "end_time",
@@ -236,6 +248,37 @@ def check_schemas(root: Path) -> None:
     for path in sorted((root / "configs").glob("*.yml")):
         if not isinstance(yaml.safe_load(path.read_text(encoding="utf-8")), dict):
             raise AssertionError(f"invalid YAML mapping: {path.name}")
+    reconstructor = load_module(
+        root / "scripts" / "reconstruct_controlled_cases.py",
+        "verify_manifest_semantics",
+    )
+    reconstructor.validate_controlled_manifests(
+        cases := read_csv(root / "data" / "manifests" / "controlled_mixture_cases.csv"),
+        requests := read_csv(root / "data" / "manifests" / "controlled_mixture_requests.csv"),
+    )
+    request_groups: dict[str, list[dict[str, str]]] = {}
+    for row in requests:
+        request_groups.setdefault(row["case_id"], []).append(row)
+    case_lookup = {row["case_id"]: row for row in cases}
+    result_rows = read_csv(
+        root / "data" / "results" / "report_cards" / "controlled_mixture_per_case_metrics.csv"
+    )
+    result_ids = {row["case_id"] for row in result_rows}
+    if result_ids != set(case_lookup):
+        raise AssertionError("released per-case result IDs do not match controlled manifest")
+    results_by_case: dict[str, list[dict[str, str]]] = {}
+    for row in result_rows:
+        results_by_case.setdefault(row["case_id"], []).append(row)
+    for case_id, case in case_lookup.items():
+        first_noise = min(
+            (row for row in request_groups[case_id] if row["role"] == "noise"),
+            key=lambda row: int(row["sequence_index"]),
+        )
+        matching = results_by_case[case_id]
+        if any(row["station_template"] != case["station"] for row in matching):
+            raise AssertionError(f"event station mismatch for released case {case_id}")
+        if any(row["station_noise"] != first_noise["station"] for row in matching):
+            raise AssertionError(f"noise audit station mismatch for released case {case_id}")
 
 
 def check_checksums(root: Path) -> None:
@@ -300,8 +343,12 @@ def check_forbidden_content(root: Path) -> None:
             raise AssertionError(f"submission identifier found in {relative}")
         if PUBLIC_TITLE in text:
             title_hits.append(relative)
-    if title_hits != ["CITATION.cff"]:
-        raise AssertionError(f"article title may appear only in CITATION.cff; found {title_hits}")
+    disallowed_title_hits = [
+        path for path in title_hits
+        if path not in {"CITATION.cff", "README.md", "docs/STUDY_MAPPING.md"}
+    ]
+    if disallowed_title_hits:
+        raise AssertionError(f"article title found outside allowed study mapping files: {disallowed_title_hits}")
 
     for archive in root.rglob("*.zip"):
         raise AssertionError(f"archive embedded in public tree: {archive.relative_to(root)}")
@@ -334,6 +381,29 @@ def check_e3(root: Path) -> None:
     }
     for name, key in keys.items():
         compare_rows(read_csv(result_root / name), actual[name], key)
+
+
+def check_e3_quick(root: Path) -> None:
+    module = load_module(root / "analysis" / "reproduce_e3_station_domain.py", "verify_e3_quick")
+    result_root = root / "data" / "results" / "e3"
+    cases = read_csv(result_root / "case_outcomes_and_covariates.csv")
+    stations = read_csv(result_root / "station_covariates.csv")
+    compare_rows(
+        read_csv(result_root / "matching_pairs.csv"),
+        module.match_stations(stations),
+        ("pair_id",),
+    )
+    frozen = {
+        (row["method"], row["metric"]): row
+        for row in read_csv(result_root / "adjusted_contrasts.csv")
+    }
+    for method in sorted({row["method"] for row in cases}):
+        subset = [row for row in cases if row["method"] == method]
+        for metric in module.METRICS:
+            estimate = module.ols_group_effect(subset, metric)
+            expected = float(frozen[(method, metric)]["regression_adjusted_A_minus_B"])
+            if not math.isclose(estimate, expected, rel_tol=0, abs_tol=1e-10):
+                raise AssertionError(f"E3 quick OLS mismatch for {method} {metric}")
 
 
 def check_e5(root: Path) -> None:
@@ -416,63 +486,33 @@ def check_identity_release(root: Path) -> None:
 
 
 def check_adapter(root: Path) -> None:
-    evaluator = load_module(root / "scripts" / "evaluate_method.py", "verify_evaluator")
-    with tempfile.TemporaryDirectory(prefix="protocol_adapter_") as temp_name:
-        temp = Path(temp_name)
-        input_dir = temp / "cases"
-        output_dir = temp / "output"
-        input_dir.mkdir()
-        rng = np.random.default_rng(3)
-        mixture = rng.normal(0.0, 0.1, (9000, 3)).astype(np.float32)
-        clean = np.zeros_like(mixture)
-        time = np.arange(2000) / 100.0
-        event = np.stack(
+    environment = dict(os.environ)
+    try:
+        completed = subprocess.run(
             [
-                np.sin(2 * np.pi * 3 * time),
-                0.5 * np.sin(2 * np.pi * 4 * time),
-                0.25 * np.cos(2 * np.pi * 5 * time),
+                sys.executable, "-B", "-m", "pytest", "-p", "no:cacheprovider",
+                str(root / "tests"),
             ],
-            axis=1,
-        ).astype(np.float32)
-        clean[3000:5000] = event
-        mixture += clean
-        np.savez(input_dir / "toy.npz", mixture=mixture, clean=clean)
-        manifest = temp / "manifest.csv"
-        with manifest.open("w", newline="", encoding="utf-8") as handle:
-            writer = csv.DictWriter(
-                handle,
-                fieldnames=["case_id", "station", "noise_station", "target_snr_db", "hidden_onset_s", "sampling_rate_hz"],
-            )
-            writer.writeheader()
-            writer.writerow(
-                {
-                    "case_id": "toy",
-                    "station": "TEST",
-                    "noise_station": "NOISE",
-                    "target_snr_db": "0",
-                    "hidden_onset_s": "30",
-                    "sampling_rate_hz": "100",
-                }
-            )
-        rows, report = evaluator.evaluate(
-            root,
-            root / "examples" / "identity_adapter.py",
-            manifest,
-            output_dir,
-            input_dir=input_dir,
-            method_name="Identity",
+            cwd=root,
+            env=environment,
+            text=True,
+            capture_output=True,
+            timeout=120,
+            check=False,
         )
-        if len(rows) != 1 or len(report) != 1:
-            raise AssertionError("adapter evaluator did not produce one valid row")
-        if abs(float(rows[0]["clean_snr_gain_db"])) > 1e-10:
-            raise AssertionError("identity adapter clean-SNR gain is not zero")
+    except subprocess.TimeoutExpired as exc:
+        raise AssertionError("unit tests timed out after 120 seconds") from exc
+    if completed.returncode:
+        raise AssertionError(
+            "unit tests failed:\n" + completed.stdout[-4000:] + completed.stderr[-4000:]
+        )
 
 
 def check_fdsn_dry_run(root: Path) -> None:
     fetcher = load_module(root / "scripts" / "fetch_fdsn_windows.py", "verify_fdsn")
-    rows = read_csv(root / "data" / "manifests" / "external_real_event_cases.csv")[:2]
+    rows = read_csv(root / "data" / "manifests" / "controlled_mixture_requests.csv")[:8]
     requests = fetcher.requests_from_rows(rows)
-    if len(requests) != 2:
+    if not requests or len(requests) > len(rows):
         raise AssertionError("FDSN dry-run request expansion failed")
     required = {"network", "station", "location", "channel_pattern", "start_time", "end_time", "provider", "fdsn_source"}
     if any(required - set(request) for request in requests):
@@ -489,7 +529,7 @@ def check_no_cache(root: Path) -> None:
         raise AssertionError(f"Python cache artifacts found: {hits}")
 
 
-def verify(root: Path) -> list[tuple[str, str]]:
+def verify(root: Path, *, full: bool = False) -> list[tuple[str, str]]:
     start_hash = tree_hash(root)
     checks: list[tuple[str, Callable[[Path], None]]] = [
         ("01 csv_and_yaml_schemas", check_schemas),
@@ -497,7 +537,7 @@ def verify(root: Path) -> list[tuple[str, str]]:
         ("03_11 forbidden_content_and_archives", check_forbidden_content),
         ("12 report_card_recomputation", check_report_cards),
         ("13 station_bootstrap_recomputation", check_bootstrap),
-        ("14 e3_ols_matching_smd", check_e3),
+        ("14 e3_quick_ols_matching_smd", check_e3_quick),
         ("15 e5_paired_seed_recomputation", check_e5),
         ("16 figure3_consistency", check_figure3),
         ("17 synthetic_metric_units", check_metric_units),
@@ -506,10 +546,13 @@ def verify(root: Path) -> list[tuple[str, str]]:
         ("19b fdsn_dry_run", check_fdsn_dry_run),
         ("22 no_python_cache", check_no_cache),
     ]
+    if full:
+        checks.insert(6, ("14b e3_full_1000_replicate_recomputation", check_e3))
     results = []
     for name, function in checks:
+        started = time.perf_counter()
         function(root)
-        results.append((name, "PASS"))
+        results.append((name, f"PASS {time.perf_counter() - started:.3f}s"))
     end_hash = tree_hash(root)
     if start_hash != end_hash:
         raise AssertionError("verifier mutated the package tree")
@@ -521,11 +564,15 @@ def verify(root: Path) -> list[tuple[str, str]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--package-root", type=Path, required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--quick", action="store_true")
+    mode.add_argument("--full", action="store_true")
     args = parser.parse_args()
     root = args.package_root.resolve()
-    for name, result in verify(root):
+    started = time.perf_counter()
+    for name, result in verify(root, full=args.full):
         print(f"{name}: {result}")
-    print("VERIFY_RELEASE: PASS")
+    print(f"VERIFY_RELEASE: PASS mode={'full' if args.full else 'quick'} total={time.perf_counter() - started:.3f}s")
     return 0
 
 
