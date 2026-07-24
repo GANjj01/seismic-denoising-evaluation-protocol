@@ -1,0 +1,23 @@
+schema_version: 1
+config_id: preprocessing_v1_0_6
+component_order: [Z, N, E]
+sampling_rate_hz: 100
+detrend:
+  demean: true
+  linear: true
+filter:
+  type: butterworth_bandpass
+  order: 4
+  low_hz: 1.0
+  high_hz: 20.0
+  phase: zero_phase_sosfiltfilt
+event_window:
+  duration_s: 35.0
+  p_index: 1000
+  p_time_s: 10.0
+evaluator_reference:
+  primary: untapered_onset
+  pre_p_samples_zeroed: true
+  post_p_duration_s: 20.0
+  onset_taper_applied: false
+  tapered_sensitivity_ramp_s: 0.5

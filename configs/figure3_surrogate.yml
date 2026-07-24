@@ -1,0 +1,21 @@
+schema_version: 1
+config_id: figure3_filtered_white_surrogate_v1_0_6
+sampling_rate_hz: 100
+filter:
+  type: butterworth_bandpass
+  order: 4
+  low_hz: 1.0
+  high_hz: 20.0
+  phase: zero_phase_sosfiltfilt
+surrogate:
+  type: filtered_white_noise
+  replicates: 10000
+  seed: 20260725
+  pointwise_interval: [0.025, 0.975]
+  simultaneous_method: maximum_absolute_studentized_deviation
+  simultaneous_quantile: 0.95
+  lag_zero_excluded: true
+lag_grid:
+  minimum_s: 0.0
+  maximum_s: 5.0
+  spacing_s: 0.01

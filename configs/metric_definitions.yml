@@ -1,0 +1,39 @@
+schema_version: 1
+config_id: metric_definitions_v1_0_6
+sampling_rate_hz: 100
+component_order: [Z, N, E]
+epsilon: 1.0e-12
+metrics:
+  clean_snr_gain_db:
+    components: [Z, N, E]
+    window: P_to_P_plus_10s
+    definition: clean_snr_output_minus_clean_snr_input
+    direction: higher
+  amplitude_ratio_clean:
+    component: Z
+    window: P_to_P_plus_2s
+    statistic: absolute_amplitude_q95
+    ideal: 1.0
+  waveform_correlation_z:
+    component: Z
+    window: P_to_P_plus_10s
+    lag_search_s: [-1.0, 1.0]
+    definition: mean_removed_normalized_cross_correlation
+    direction: higher
+  background_suppression_db:
+    components: [Z, N, E]
+    definition: 20_log10_input_background_rms_over_output_background_rms
+    direction: higher_with_fidelity_checks
+  covariance_shape_distance:
+    components: [Z, N, E]
+    window: P_to_P_plus_10s
+    definition: frobenius_distance_between_trace_normalized_covariances
+    direction: lower
+  polarization:
+    components: [Z, N, E]
+    window: P_to_P_plus_10s
+    outputs: [rectilinearity, planarity, principal_axis_angle_deg]
+  apparent_snr_gain_db:
+    component: Z
+    definition: post_P_apparent_snr_minus_pre_P_apparent_snr
+    direction: higher_with_amplitude_and_delay_checks

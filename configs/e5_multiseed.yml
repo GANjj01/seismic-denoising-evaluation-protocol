@@ -1,0 +1,17 @@
+schema_version: 1
+config_id: e5_descriptive_multiseed_v1_0_6
+reference_definition: untapered_onset
+paired_seeds: [42, 43, 44]
+comparison: lambda_0_5_minus_lambda_0
+checkpoint_selection:
+  frozen_before_final_evaluation: true
+  source: selected_checkpoints.csv
+metrics:
+  - clean_snr_gain_db
+  - amplitude_ratio_clean
+  - waveform_correlation_z
+  - background_suppression_db
+aggregation:
+  within_seed: case_mean
+  across_seed_summary: [mean, median, minimum, maximum, direction_consistent]
+inference_scope: descriptive_n_equals_3

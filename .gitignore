@@ -1,0 +1,63 @@
+# Journal and submission files
+manuscript/
+submitted_original/
+diff/
+response/
+cover/
+revision_workspace/
+release_staging/
+public_release_staging/
+audit/
+contact_sheets/
+submission/
+
+*manuscript*.tex
+*manuscript*.pdf
+*manuscript_diff*
+*response_to_reviewers*
+*revision_cover_letter*
+*supplementary_material*
+*cover_letter*
+*latexdiff*
+*elsarticle*
+
+# Release archives
+seismic-denoising-eval-protocol_v*.zip
+seismic-denoising-eval-protocol_v*.zip.sha256
+
+# Raw waveform and model files
+*.mseed
+*.miniseed
+*.sac
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.hdf5
+
+# Tensor/intermediate binary files
+*.npz
+*.npy
+
+# Python/cache
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# TeX/build
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

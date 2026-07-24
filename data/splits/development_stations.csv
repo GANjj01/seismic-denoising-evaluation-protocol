@@ -1,0 +1,6 @@
+network,station,location,channel_pattern,provider,fdsn_source,split_role
+AM,R3E8B,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,development
+AM,R57B0,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,development
+AM,R6468,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,development
+AM,R6995,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,development
+AM,RF4CA,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,development

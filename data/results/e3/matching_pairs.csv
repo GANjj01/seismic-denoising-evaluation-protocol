@@ -1,0 +1,16 @@
+pair_id,station_A,station_B,distance,caliper,replacement,tie_break
+1,R17EF,R8219,0.7025011041313932,2.5,false,lowest_distance_then_station_name
+2,R1A27,R24AE,0.47687827090711704,2.5,false,lowest_distance_then_station_name
+3,R28BA,R7BF6,0.9843017055509314,2.5,false,lowest_distance_then_station_name
+4,R36D4,R87FD,0.4726971077495126,2.5,false,lowest_distance_then_station_name
+5,R3AE5,R976A,1.533567614218925,2.5,false,lowest_distance_then_station_name
+6,R4017,RAC20,0.4543747730835992,2.5,false,lowest_distance_then_station_name
+7,R68A5,R92E0,0.6306335253340811,2.5,false,lowest_distance_then_station_name
+8,R6DB9,RC2BF,0.8147212365288595,2.5,false,lowest_distance_then_station_name
+9,R74A7,R9F13,1.080134837919289,2.5,false,lowest_distance_then_station_name
+10,R7805,R2004,0.8785492343412062,2.5,false,lowest_distance_then_station_name
+11,R81A1,RB0FB,1.630696351105217,2.5,false,lowest_distance_then_station_name
+12,R8B57,RAB7F,0.7462028883220838,2.5,false,lowest_distance_then_station_name
+13,R9634,RCBF0,1.159321233615553,2.5,false,lowest_distance_then_station_name
+14,RD4CB,RE8DB,0.6107013718103734,2.5,false,lowest_distance_then_station_name
+15,S941D,R8A9B,1.503805548779515,2.5,false,lowest_distance_then_station_name

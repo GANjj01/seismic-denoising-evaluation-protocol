@@ -1,0 +1,16 @@
+network,station,location,channel_pattern,provider,fdsn_source,split_role
+AM,R17EF,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,R1A27,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,R28BA,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,R36D4,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,R3AE5,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,R4017,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,R68A5,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,R6DB9,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,R74A7,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,R7805,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,R81A1,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,R8B57,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,R9634,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,RD4CB,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation
+AM,S941D,00,EH?,RASPISHAKE,https://data.raspberryshake.org/fdsnws/dataselect/1/query,train_validation

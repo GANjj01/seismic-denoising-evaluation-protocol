@@ -1,0 +1,32 @@
+schema_version: 1
+config_id: e3_no_taper_station_domain_v1_0_6
+reference_definition: untapered_onset
+groups:
+  A: held_out_training_or_internal_validation_station_noise
+  B: unseen_final_station_noise
+unadjusted:
+  cluster_unit: station
+  groups_resampled_independently: true
+  replicates: 20000
+  seed: 20260611
+ols:
+  formula: outcome ~ group_A + standardized_covariates
+  covariates:
+    - target_snr_db
+    - log10_noise_rms_injection_10s
+    - dominant_freq_hz
+    - spectral_slope_1_20
+    - log10_high_low_bandpower_ratio
+    - frame_rms_cv_4s
+  station_cluster_replicates: 1000
+  seed_base: 20260611
+matching:
+  type: greedy_1_to_1_without_replacement
+  caliper: 2.5
+  tie_break: lowest_distance_then_station_name
+  covariates:
+    - noise_rms_full_mean
+    - dominant_freq_hz_mean
+    - spectral_slope_1_20_mean
+    - frame_rms_cv_4s_mean
+interpretation: limited_overlap_station_domain_sensitivity_not_causal_memorization

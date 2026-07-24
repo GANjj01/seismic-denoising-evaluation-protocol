@@ -1,0 +1,18 @@
+schema_version: 1
+config_id: real_event_scoring_v1_0_6
+sampling_rate_hz: 100
+component_order: [Z, N, E]
+window_duration_s: 35.0
+p_index: 1000
+apparent_snr:
+  component: Z
+  noise_window: [0.0, 10.0]
+  signal_window: [10.0, 20.0]
+amplitude_ratio:
+  component: Z
+  post_p_window_s: 2.0
+  absolute_amplitude_quantile: 0.95
+trigger_delay:
+  unit: seconds
+clean_reference_available: false
+interpretation: apparent_snr_requires_joint_amplitude_and_delay_review

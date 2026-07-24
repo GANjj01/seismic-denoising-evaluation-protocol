@@ -1,0 +1,9 @@
+{
+  "pointwise_exceedance_count": 359,
+  "pointwise_tested_lag_count": 500,
+  "replicates": 10000,
+  "seed": 20260725,
+  "simultaneous_band_exceedance_count": 242,
+  "simultaneous_tested_lag_count": 500,
+  "surrogate_type": "filtered_white_noise"
+}

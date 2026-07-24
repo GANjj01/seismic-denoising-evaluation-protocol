@@ -1,0 +1,24 @@
+schema_version: 1
+config_id: controlled_mixture_v1_0_6
+sampling_rate_hz: 100
+component_order: [Z, N, E]
+continuous_duration_s: 90.0
+injected_event_duration_s: 20.0
+target_snr_db: [-5.0, 0.0, 5.0]
+snr_scaling_window:
+  start: hidden_onset
+  duration_s: 10.0
+score_crop:
+  duration_s: 35.0
+  p_time_s: 10.0
+reference_definition: untapered_onset
+event_exclusion:
+  before_hidden_onset_s: 2.0
+  after_injected_event_s: 2.0
+pairing:
+  deterministic: true
+  identifier_column: deterministic_pairing_id
+method_access:
+  hidden_onset: false
+  target_snr: false
+  clean_reference: false

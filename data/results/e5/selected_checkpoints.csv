@@ -1,0 +1,4 @@
+seed,lambda0_method,lambda05_method,lambda0_epoch,lambda05_epoch
+42,exp5_p0_seed42_e015,exp5_p05_seed42_e020,15,20
+43,exp5_p0_seed43_e008,exp5_p05_seed43_e022,8,22
+44,exp5_p0_seed44_e013,exp5_p05_seed44_e014,13,14

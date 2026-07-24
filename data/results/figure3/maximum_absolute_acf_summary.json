@@ -1,0 +1,7 @@
+{
+  "maximum_absolute_acf_null_threshold": 0.7688369751,
+  "null_quantile": 0.95,
+  "observed_maximum_absolute_acf": 0.7617254380479908,
+  "observed_maximum_absolute_acf_lag_seconds": 0.01,
+  "threshold_exceeded": false
+}

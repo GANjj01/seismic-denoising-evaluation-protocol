@@ -1,0 +1,9 @@
+{
+  "first_exceedance_lag_seconds": 0.01,
+  "maximum_deviation_lag_seconds": 0.03,
+  "method": "maximum_absolute_studentized_deviation",
+  "observed_global_statistic": 155.95812782856663,
+  "q95": 3.905502288330967,
+  "simultaneous_band_exceedance_count": 242,
+  "simultaneous_band_exceeded": true
+}
