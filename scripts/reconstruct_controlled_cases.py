@@ -134,14 +134,29 @@ def write_deterministic_npz(path: Path, arrays: dict[str, Any]) -> None:
 
 
 def locate_waveform(root: Path, source_window_id: str) -> Path:
-    for suffix in (".mseed", ".miniseed", ".npz"):
+    for suffix in (".mseed", ".miniseed"):
         direct = root / f"{source_window_id}{suffix}"
         if direct.is_file():
             return direct
+    rejected_npz = root / f"{source_window_id}.npz"
+    if rejected_npz.is_file():
+        raise ValueError(
+            f"source-waveform NPZ is not supported: {rejected_npz}; "
+            "provide MiniSEED (.mseed or .miniseed)"
+        )
     matches = [
         path for path in root.rglob(f"{source_window_id}.*")
-        if path.suffix.lower() in {".mseed", ".miniseed", ".npz"}
+        if path.suffix.lower() in {".mseed", ".miniseed"}
     ]
+    rejected = [
+        path for path in root.rglob(f"{source_window_id}.npz")
+        if path.is_file()
+    ]
+    if not matches and rejected:
+        raise ValueError(
+            f"source-waveform NPZ is not supported: {rejected[0]}; "
+            "provide MiniSEED (.mseed or .miniseed)"
+        )
     if len(matches) != 1:
         raise FileNotFoundError(
             f"expected exactly one local waveform for {source_window_id}; found {len(matches)}"
@@ -160,15 +175,12 @@ def _fit_length(array: np.ndarray, length: int) -> np.ndarray:
 def load_three_component(path: Path, sampling_rate_hz: float, length: int) -> np.ndarray:
     """Load Z/N/E, reproducing the historical trim/pad behavior."""
     if path.suffix.lower() == ".npz":
-        with np.load(path, allow_pickle=False) as payload:
-            key = "waveform" if "waveform" in payload else "data"
-            data = np.asarray(payload[key], dtype=np.float64)
-            rate = float(payload["sampling_rate_hz"]) if "sampling_rate_hz" in payload else sampling_rate_hz
-        if not np.isclose(rate, sampling_rate_hz):
-            raise ValueError(f"{path} sampling rate {rate} does not match {sampling_rate_hz}")
-        if data.ndim != 2 or data.shape[1] != 3:
-            raise ValueError(f"{path} must contain shape (n_samples, 3)")
-        return _fit_length(data, length)
+        raise ValueError(
+            f"source-waveform NPZ is not supported: {path}; "
+            "provide MiniSEED (.mseed or .miniseed)"
+        )
+    if path.suffix.lower() not in {".mseed", ".miniseed"}:
+        raise ValueError(f"unsupported source-waveform format: {path.suffix or '<none>'}")
 
     try:
         from obspy import read

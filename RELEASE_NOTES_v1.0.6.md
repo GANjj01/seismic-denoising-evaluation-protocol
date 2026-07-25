@@ -8,7 +8,8 @@ It includes:
 - current metric, preprocessing, controlled-case construction, and adapter APIs;
 - frozen configurations, station splits, valid FDSN requests, and normalized
   controlled-case construction manifests;
-- an external-waveform reconstruction CLI and deterministic case artifacts;
+- an external-waveform reconstruction CLI and standardized reconstructed-case
+  NPZ outputs;
 - controlled-mixture and external real-event report-card data;
 - no-taper E3 station-domain and E5 paired-seed recomputation inputs;
 - verification of released Figure 3 numerical artifacts; and

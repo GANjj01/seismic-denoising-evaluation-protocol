@@ -37,6 +37,30 @@ byte-identical replay of unpublished historical case arrays.
 
 ## Quick Start
 
+Install the base evaluation package:
+
+```bash
+python -m pip install .
+```
+
+Install test dependencies for offline verification:
+
+```bash
+python -m pip install ".[test]"
+```
+
+Install FDSN/MiniSEED support for waveform download and reconstruction:
+
+```bash
+python -m pip install ".[fetch]"
+```
+
+For development with both optional groups:
+
+```bash
+python -m pip install -e ".[test,fetch]"
+```
+
 Run the normal offline verifier:
 
 ```bash
@@ -67,6 +91,11 @@ python -B scripts/reconstruct_controlled_cases.py \
   --waveform-root <WAVEFORM_ROOT> \
   --output-dir <OUTPUT_DIR>
 ```
+
+Source waveforms must be MiniSEED (`.mseed` or `.miniseed`). Source-waveform
+NPZ input is intentionally rejected. The reconstructor still writes standardized
+reconstructed-case NPZ artifacts, which are the NPZ inputs accepted by
+`evaluate_method.py`.
 
 Evaluate an adapter that defines `denoise(waveform, sampling_rate_hz)`:
 

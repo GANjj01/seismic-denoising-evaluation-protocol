@@ -145,6 +145,16 @@ def test_deterministic_npz_hash_and_schema(tmp_path: Path) -> None:
         assert set(arrays) == set(payload.files)
 
 
+def test_source_waveform_npz_is_explicitly_rejected(tmp_path: Path) -> None:
+    source_id = "AM.TEST.noise.20260101T000000"
+    source_npz = tmp_path / f"{source_id}.npz"
+    np.savez(source_npz, waveform=np.zeros((3500, 3), dtype=np.float32))
+    with pytest.raises(ValueError, match="source-waveform NPZ is not supported"):
+        RECONSTRUCTOR.locate_waveform(tmp_path, source_id)
+    with pytest.raises(ValueError, match="source-waveform NPZ is not supported"):
+        RECONSTRUCTOR.load_three_component(source_npz, 100.0, 3500)
+
+
 def test_dry_run_does_not_write(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     output = tmp_path / "output"
     rows = RECONSTRUCTOR.reconstruct(

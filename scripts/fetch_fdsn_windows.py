@@ -6,6 +6,7 @@ import argparse
 import csv
 import json
 import sys
+import time
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -100,15 +101,43 @@ def output_name(request: dict[str, str]) -> str:
     return f"{request['network']}.{request['station']}.{request['location']}.{request['event_noise_role']}.{compact}.mseed"
 
 
+def download_from_manifest_endpoint(
+    request: dict[str, str],
+    destination: Path,
+    *,
+    timeout_s: float = 120.0,
+) -> None:
+    endpoint = request["fdsn_source"]
+    try:
+        import requests
+    except Exception as exc:
+        raise RuntimeError("the fetch extra (ObsPy/requests) is required for FDSN downloads") from exc
+    params = {
+        "network": request["network"],
+        "station": request["station"],
+        "location": request["location"],
+        "channel": request["channel_pattern"],
+        "starttime": request["start_time"],
+        "endtime": request["end_time"],
+        "format": "miniseed",
+    }
+    for attempt in range(4):
+        response = requests.get(endpoint, params=params, timeout=timeout_s)
+        if response.status_code != 429 or attempt == 3:
+            break
+        retry_after = response.headers.get("Retry-After")
+        time.sleep(float(retry_after) if retry_after else 2.0 ** attempt)
+    response.raise_for_status()
+    payload = response.content
+    if not payload:
+        raise RuntimeError(f"FDSN returned an empty response for {request['source_window_id']}")
+    destination.write_bytes(payload)
+
+
 def run(manifest: Path, output_dir: Path, provider: str | None, dry_run: bool) -> list[dict[str, Any]]:
     requests = requests_from_rows(read_csv(manifest), provider)
     records: list[dict[str, Any]] = []
     if not dry_run:
-        try:
-            from obspy import UTCDateTime
-            from obspy.clients.fdsn import Client
-        except Exception as exc:
-            raise SystemExit(f"ObsPy is required for downloads: {exc}") from exc
         output_dir.mkdir(parents=True, exist_ok=True)
         clients: dict[str, Any] = {}
 
@@ -118,16 +147,27 @@ def run(manifest: Path, output_dir: Path, provider: str | None, dry_run: bool) -
         records.append(record)
         print(json.dumps(record, sort_keys=True))
         if not dry_run:
-            client = clients.setdefault(request["provider"], Client(request["provider"]))
-            stream = client.get_waveforms(
-                request["network"],
-                request["station"],
-                request["location"],
-                request["channel_pattern"],
-                UTCDateTime(request["start_time"]),
-                UTCDateTime(request["end_time"]),
-            )
-            stream.write(str(destination), format="MSEED")
+            if provider is None and request["fdsn_source"].startswith(("http://", "https://")):
+                download_from_manifest_endpoint(request, destination)
+            else:
+                try:
+                    from obspy import UTCDateTime
+                    from obspy.clients.fdsn import Client
+                except Exception as exc:
+                    raise SystemExit(f"ObsPy is required for provider-based downloads: {exc}") from exc
+                client = clients.get(request["provider"])
+                if client is None:
+                    client = Client(request["provider"])
+                    clients[request["provider"]] = client
+                stream = client.get_waveforms(
+                    request["network"],
+                    request["station"],
+                    request["location"],
+                    request["channel_pattern"],
+                    UTCDateTime(request["start_time"]),
+                    UTCDateTime(request["end_time"]),
+                )
+                stream.write(str(destination), format="MSEED")
     return records
 
 

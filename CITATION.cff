@@ -7,5 +7,5 @@ authors:
     given-names: "Jiajing"
   - family-names: "Takemura"
     given-names: "Takato"
-repository-code: "https://github.com/GANjj01/seismic-denoising-eval-protocol"
+repository-code: "https://github.com/GANjj01/seismic-denoising-evaluation-protocol"
 license: "MIT"
