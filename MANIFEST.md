@@ -1,6 +1,6 @@
 # Public Export Manifest
 
-Version 1.0.6 was assembled by allowlist from frozen numerical and protocol
+Version 1.0.7 was assembled by allowlist from frozen numerical and protocol
 sources. No old Git metadata or release archive was copied.
 
 | Old path category | New path | Keep/Delete | Reason |

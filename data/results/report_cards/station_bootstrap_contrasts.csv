@@ -29,9 +29,9 @@ IdealizedWienerUpperBound,Identity,background_suppression_difference,background_
 N2V-point,Identity,clean_snr_gain,clean_snr_gain_db,34,816,0.15678925676187594,0.07465624985379972,0.24504900762951604,True,20000,20260611
 N2V-point,Identity,correlation_difference,waveform_correlation_z,34,816,-0.00467572963576673,-0.0068478021694442556,-0.0025560626689602123,True,20000,20260611
 N2V-point,Identity,background_suppression_difference,background_suppression_db,34,816,0.25341678254109345,0.06387663030171896,0.4805300712857866,True,20000,20260611
-N2V-sync,Identity,clean_snr_gain,clean_snr_gain_db,34,816,0.19977750502110492,0.13805526301493157,0.26502353045915994,True,20000,20260611
-N2V-sync,Identity,correlation_difference,waveform_correlation_z,34,816,-0.002603530206000577,-0.004163562227400451,-0.0011255522250083474,True,20000,20260611
-N2V-sync,Identity,background_suppression_difference,background_suppression_db,34,816,0.3182244917512039,0.15366379405552022,0.5207583554475069,True,20000,20260611
+N2V-sync,Identity,clean_snr_gain,clean_snr_gain_db,34,816,0.018227667413350496,-0.06722715442295778,0.11072885625835219,False,20000,20260611
+N2V-sync,Identity,correlation_difference,waveform_correlation_z,34,816,-0.0027678545890900794,-0.004721420015019844,-0.0009460126367567925,True,20000,20260611
+N2V-sync,Identity,background_suppression_difference,background_suppression_db,34,816,0.1413900537835195,-0.06666210462585846,0.39678562074319,False,20000,20260611
 Wiener-blind,Identity,clean_snr_gain,clean_snr_gain_db,34,816,1.7546053492089413,1.517420514955692,1.988320049306043,True,20000,20260611
 Wiener-blind,Identity,correlation_difference,waveform_correlation_z,34,816,-0.002355954433044843,-0.011052594650591333,0.006493642256654034,False,20000,20260611
 Wiener-blind,Identity,background_suppression_difference,background_suppression_db,34,816,2.223518622959094,1.8159651254548137,2.642530415148707,True,20000,20260611

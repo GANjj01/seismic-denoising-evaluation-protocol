@@ -80,7 +80,7 @@ the primary `evaluate_method.py` output does not claim to compute them.
 
 External real-event scoring has no clean or pseudo-clean target. Apparent SNR
 uses Z-component P-to-P+10 s RMS against pre-P RMS, and is interpreted jointly
-with raw-input amplitude ratio and trigger delay. Version 1.0.6 distributes
+with raw-input amplitude ratio and trigger delay. Version 1.0.7 distributes
 released CSV results and metric functions for this track, but no end-to-end
 batch evaluator for new external-event waveforms.
 

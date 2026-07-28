@@ -21,7 +21,7 @@ manuscripts, and publication-layout figures are not distributed.
 - reconstruct protocol-conformant controlled cases; and
 - evaluate a new denoising method on those reconstructed cases.
 
-Version 1.0.6 provides external real-event result tables and underlying metric
+Version 1.0.7 provides external real-event result tables and underlying metric
 functions for audit, but not a complete batch CLI for new external real events.
 
 **Not distributed**
@@ -138,5 +138,5 @@ results only; third-party weights and training projects are not distributed.
 
 Source code is MIT licensed. Released derived metrics and manifests use
 `LICENSE-DATA` (CC BY 4.0). External waveforms remain under provider terms.
-Software citation metadata for version 1.0.6 are in `CITATION.cff`; no DOI or
+Software citation metadata for version 1.0.7 are in `CITATION.cff`; no DOI or
 release date is asserted before formal publication of this public repository.

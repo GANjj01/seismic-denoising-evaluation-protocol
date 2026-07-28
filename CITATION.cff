@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this evaluation protocol, cite this software."
 title: "Seismic Denoising Evaluation Protocol"
-version: "1.0.6"
+version: "1.0.7"
 authors:
   - family-names: "Gan"
     given-names: "Jiajing"
