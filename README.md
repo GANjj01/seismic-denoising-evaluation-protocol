@@ -4,8 +4,6 @@ This repository provides an executable evaluation protocol, frozen
 machine-readable manifests, derived numerical results, and offline
 verification tools for three-component seismic denoising.
 
-Journal manuscripts, response letters, cover letters, supplementary
-manuscripts, and publication-layout figures are not distributed.
 
 ## Capability Scope
 
